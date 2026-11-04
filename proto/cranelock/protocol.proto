@@ -1,0 +1,91 @@
+syntax = "proto3";
+package cranelock.v1;
+
+enum Mode {
+  MODE_UNSPECIFIED = 0;
+  CENTRAL = 1;
+  LOCAL = 2;
+  REJOINING = 3;
+}
+message Empty {}
+message HeartbeatMessage {
+  string agent_id = 1;
+  uint64 epoch = 2;
+  string token_holder = 3;
+  Mode mode = 4;
+  double sent_unix_seconds = 5;
+  bool has_token = 6;
+  string outgoing_transfer_id = 7;
+  uint64 revision = 8;
+}
+message TokenRequestMessage {
+  string agent_id = 1;
+  uint64 epoch = 2;
+  string request_id = 3;
+  uint64 revision = 4;
+}
+message TokenTransferMessage {
+  string sender_id = 1;
+  string receiver_id = 2;
+  uint64 epoch = 3;
+  string transfer_id = 4;
+  repeated string request_queue = 5;
+  uint64 revision = 6;
+  string holder = 7;
+}
+message Reply {
+  bool accepted = 1;
+  string reason = 2;
+  uint64 epoch = 3;
+  uint64 revision = 4;
+}
+// carries a signed recovery proposal
+message RecoveryProposal {
+  string proposer_id = 1;
+  bytes proposal_json = 2;
+  bytes proposer_signature = 3;
+}
+message RecoveryVote {
+  bool accepted = 1;
+  string reason = 2;
+  uint64 epoch = 3;
+  string voter_id = 4;
+  bytes signature = 5;
+}
+message PeerState {
+  string agent_id = 1;
+  double last_seen_monotonic = 2;
+  string status = 3;
+}
+message AgentState {
+  string agent_id = 1;
+  uint64 epoch = 2;
+  bool has_token = 3;
+  string token_holder = 4;
+  Mode mode = 5;
+  repeated string request_queue = 6;
+  repeated PeerState peers = 7;
+  string pending_transfer_id = 8;
+  uint64 revision = 9;
+}
+message ControllerHeartbeatRequest {
+  string agent_id = 1;
+}
+message ControllerHeartbeatResponse {
+  bool available = 1;
+  string controller_id = 2;
+  uint64 epoch = 3;
+  uint64 revision = 4;
+  string holder = 5;
+  string mode = 6;
+}
+service CraneAgent {
+  rpc Heartbeat(HeartbeatMessage) returns (Reply);
+  rpc TokenRequest(TokenRequestMessage) returns (Reply);
+  rpc TokenTransfer(TokenTransferMessage) returns (Reply);
+  rpc VoteRecovery(RecoveryProposal) returns (RecoveryVote);
+  rpc GetAgentState(Empty) returns (AgentState);
+}
+service CraneController {
+  rpc Heartbeat(ControllerHeartbeatRequest) returns (ControllerHeartbeatResponse);
+}

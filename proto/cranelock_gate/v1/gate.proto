@@ -1,0 +1,31 @@
+syntax = "proto3";
+package cranelock.gate.v1;
+
+// Payloads are canonical UTF-8 JSON, signed byte-for-byte with Ed25519.
+// The normative operation schemas and signing domain are in docs/CONTRACT.md.
+// This envelope avoids language-dependent protobuf/JSON signature encodings.
+message SignedCommand {
+  bytes payload_json = 1;
+  bytes signature = 2;
+}
+message StateRequest {}
+message Decision {
+  bool allowed = 1;
+  string reason = 2;
+  bool replayed = 3;
+  // True only on a newly committed state transition. Never act on a replay.
+  bool action_applied = 4;
+  string request_id = 5;
+  bytes state_json = 6;
+  bytes grant_json = 7;
+}
+service TrustedAccessGate {
+  rpc InstallAuthority(SignedCommand) returns (Decision);
+  rpc TransferHolder(SignedCommand) returns (Decision);
+  rpc RequestGrant(SignedCommand) returns (Decision);
+  // Only the trusted simulator entry boundary may call this operation.
+  rpc ValidateEntry(SignedCommand) returns (Decision);
+  rpc ReportLaneState(SignedCommand) returns (Decision);
+  rpc ClearLane(SignedCommand) returns (Decision);
+  rpc GetState(StateRequest) returns (Decision);
+}
