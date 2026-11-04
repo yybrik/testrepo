@@ -1,0 +1,37 @@
+# Switches the cranelock-gate Deployment from the plaintext simulation listener to
+# mutual TLS. Create the Secret first, then patch (see docs/DEPLOYMENT.md):
+#   kubectl create secret generic cranelock-gate-tls --from-file=demo-data/tls
+#   kubectl patch deployment cranelock-gate --patch-file deploy/kubernetes/gate-tls-patch.yaml
+# Native kubelet gRPC probes cannot present a client certificate, so the probes run
+# the bundled health check with the probe identity instead.
+spec:
+  template:
+    spec:
+      containers:
+        - name: gate
+          args: [serve, --config, /config/config.json, --database, /data/gate.sqlite,
+                 --bind, "0.0.0.0:50051",
+                 --tls-cert, /tls/server.pem, --tls-key, /tls/server-key.pem, --tls-ca, /tls/ca.pem]
+          readinessProbe:
+            grpc: null
+            exec:
+              command: [python, -m, cranelock_gate.healthcheck,
+                        --tls-cert, /tls/probe.pem, --tls-key, /tls/probe-key.pem, --tls-ca, /tls/ca.pem]
+            initialDelaySeconds: 2
+            timeoutSeconds: 5
+          livenessProbe:
+            grpc: null
+            exec:
+              command: [python, -m, cranelock_gate.healthcheck,
+                        --tls-cert, /tls/probe.pem, --tls-key, /tls/probe-key.pem, --tls-ca, /tls/ca.pem]
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+      volumes:
+        - name: tls
+          secret:
+            secretName: cranelock-gate-tls
+            defaultMode: 0440

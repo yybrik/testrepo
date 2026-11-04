@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: cranelock-gate
+    static_configs:
+      - targets: ["gate:9090"]
+
+
+  
+  

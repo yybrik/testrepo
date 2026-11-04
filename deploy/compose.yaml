@@ -1,0 +1,38 @@
+services:
+  gate:
+    build:
+      context: ..
+    image: cranelock-gate:0.1.0
+    ports:
+      - "127.0.0.1:50051:50051"
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - gate-data:/data
+      - ../demo-data/config.json:/config/config.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-m", "cranelock_gate.healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    ports:
+      - "127.0.0.1:9091:9090"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+
+volumes:
+  gate-data:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,9 @@
+grpcio==1.84.0
+protobuf==7.36.2
+grpcio-health-checking==1.84.0
+cryptography==50.0.2
+prometheus-client==0.26.0
+
+[dev]
+grpcio-tools==1.84.0
+pytest==9.1.1

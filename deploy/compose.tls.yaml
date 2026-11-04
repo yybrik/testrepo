@@ -1,0 +1,14 @@
+# Mutual-TLS gate. Layer on top of compose.yaml; Prometheus and Grafana are unchanged.
+#   python -m cranelock_gate.tls --directory demo-data/tls
+#   docker compose -f deploy/compose.yaml -f deploy/compose.tls.yaml up -d
+# See docs/DEPLOYMENT.md, "Mutual TLS with Docker Compose".
+services:
+  gate:
+    command: [serve, --config, /config/config.json, --database, /data/gate.sqlite,
+              --bind, "0.0.0.0:50051",
+              --tls-cert, /tls/server.pem, --tls-key, /tls/server-key.pem, --tls-ca, /tls/ca.pem]
+    volumes:
+      - ../demo-data/tls:/tls:ro
+    healthcheck:
+      test: [CMD, python, -m, cranelock_gate.healthcheck,
+             --tls-cert, /tls/probe.pem, --tls-key, /tls/probe-key.pem, --tls-ca, /tls/ca.pem]

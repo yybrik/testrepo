@@ -1,0 +1,33 @@
+# Run only for a NEW experiment, with gate Deployment scaled to zero.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cranelock-gate-init
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: init
+          image: cranelock-gate:0.1.0
+          imagePullPolicy: IfNotPresent
+          args: [init, --config, /config/config.json, --database, /data/gate.sqlite]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: cranelock-gate-data
+        - name: config
+          configMap:
+            name: cranelock-gate-config

@@ -1,0 +1,73 @@
+services:
+  crane-a:
+    build:
+      context: ..
+      dockerfile: Dockerfile.agent
+    image: cranelock-agent:0.1.0
+    command:
+      - run
+      - --id
+      - crane-a
+      - --listen
+      - 0.0.0.0:50051
+      - --peer
+      - crane-b=crane-b:50051
+      - --peer
+      - crane-c=crane-c:50051
+      - --holder
+      - crane-a
+      - --mode
+      - LOCAL
+      - --state-file
+      - /data/state.json
+    volumes:
+      - crane-a-data:/data
+
+  crane-b:
+    image: cranelock-agent:0.1.0
+    command:
+      - run
+      - --id
+      - crane-b
+      - --listen
+      - 0.0.0.0:50051
+      - --peer
+      - crane-a=crane-a:50051
+      - --peer
+      - crane-c=crane-c:50051
+      - --holder
+      - crane-a
+      - --mode
+      - LOCAL
+      - --state-file
+      - /data/state.json
+      - --request-after
+      - "20"
+    volumes:
+      - crane-b-data:/data
+
+  crane-c:
+    image: cranelock-agent:0.1.0
+    command:
+      - run
+      - --id
+      - crane-c
+      - --listen
+      - 0.0.0.0:50051
+      - --peer
+      - crane-a=crane-a:50051
+      - --peer
+      - crane-b=crane-b:50051
+      - --holder
+      - crane-a
+      - --mode
+      - LOCAL
+      - --state-file
+      - /data/state.json
+    volumes:
+      - crane-c-data:/data
+
+volumes:
+  crane-a-data:
+  crane-b-data:
+  crane-c-data:

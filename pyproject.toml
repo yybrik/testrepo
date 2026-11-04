@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cranelock-gate"
+version = "0.1.0"
+description = "Standalone trusted access gate for the CraneLock simulator"
+requires-python = ">=3.12"
+dependencies = [
+  "grpcio==1.84.0", "protobuf==7.36.2", "grpcio-health-checking==1.84.0",
+  "cryptography==50.0.2", "prometheus-client==0.26.0"
+]
+
+[project.optional-dependencies]
+dev = ["grpcio-tools==1.84.0", "pytest==9.1.1"]
+evaluation = ["matplotlib>=3.9,<4"]
+ui-test = ["playwright>=1.50,<2"]
+
+[project.scripts]
+cranelock-gate = "cranelock_gate.server:main"
+cranelock-demo = "cranelock_gate.demo:main"
+
+[tool.setuptools.packages.find]
+include = ["cranelock", "cranelock_gate*", "cranelock_sim*"]
+
+[tool.setuptools.package-data]
+cranelock_sim = ["web/*.html", "web/*.css", "web/*.js"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

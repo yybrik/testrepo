@@ -1,0 +1,3 @@
+[console_scripts]
+cranelock-demo = cranelock_gate.demo:main
+cranelock-gate = cranelock_gate.server:main

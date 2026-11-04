@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: cranelock-gate
+Version: 0.1.0
+Summary: Standalone trusted access gate for the CraneLock simulator
+Requires-Python: >=3.12
+Requires-Dist: grpcio==1.84.0
+Requires-Dist: protobuf==7.36.2
+Requires-Dist: grpcio-health-checking==1.84.0
+Requires-Dist: cryptography==50.0.2
+Requires-Dist: prometheus-client==0.26.0
+Provides-Extra: dev
+Requires-Dist: grpcio-tools==1.84.0; extra == "dev"
+Requires-Dist: pytest==9.1.1; extra == "dev"

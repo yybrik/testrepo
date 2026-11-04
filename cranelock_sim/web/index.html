@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CraneLock — Evaluation</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<aside class="rail">
+  <a class="brand" href="#overview" aria-label="CraneLock results home"><span class="brand-mark">CL</span><span>CraneLock<small>CSC3104 · Group 20</small></span></a>
+  <div class="rail-label">Evaluation</div>
+  <a class="nav active" href="#overview">Overview</a>
+  <a class="nav" href="#comparison">Comparisons</a>
+  <a class="nav" href="#trace">Playback</a>
+  <a class="nav" href="#evidence">Saved evidence</a>
+  <div class="rail-bottom">Tuas Mega Port simulation<p>Local experiments<br>Saved results, not live control</p></div>
+</aside>
+<main>
+  <header class="topbar"><span>Group 20 <b>/</b> Evaluation</span><span class="environment">Saved experiments</span></header>
+  <section id="overview" class="intro"><div><h1>Crane coordination tests</h1><p>Compare normal operation, controller failure and token recovery.</p></div><button id="refresh" class="button light">Refresh results</button></section>
+  <div id="message" class="notice hidden" role="status"></div>
+  <details class="panel advanced-settings"><summary>Test settings and saved experiments</summary><div class="filters" aria-label="Result filters">
+    <label class="dataset">EXPERIMENT SET<select id="collection" aria-label="Experiment set"></select></label>
+    <label>SCENARIO<select id="scenario" aria-label="Scenario"><option value="all">All scenarios</option></select></label>
+    <label>REQUEST SEQUENCE<select id="seed" aria-label="Workload seed"><option value="all">All request sequences</option></select></label>
+    <label>REQUESTS PER TEST<select id="load" aria-label="Request count"><option value="all">All request counts</option></select></label>
+    <div class="source"><span class="source-dot"></span><div>From saved evidence<small id="source-label">Reading results…</small></div></div>
+  </div>
+  <label class="toggle collection-toggle"><input id="all-collections" type="checkbox"> Show all saved sets, including development and failed attempts</label>
+  </details>
+  <section class="panel focus-picker"><label>Scenario<select id="focus" aria-label="Comparison situation"></select></label><p id="focus-context"></p></section>
+  <details id="explanation" class="panel explanation" aria-label="Experiment explained"><summary>How this test works and what the terms mean</summary>
+    <h2 id="experiment-title">Choose an experiment.</h2>
+    <div class="explanation-grid"><article><h3>What are we testing?</h3><p id="test-explanation"></p></article><article><h3>What should happen?</h3><p id="expected-explanation"></p></article><article><h3>What do the results mean?</h3><div id="result-explanation"></div></article></div>
+    <p class="run-definition"><strong>What is a run?</strong> One system tested in one situation with one request sequence. A sequence number (also called a seed) lets us repeat the same requests. It is not a crane number.<br><strong>Crane names:</strong> A = Crane 1, B = Crane 2, C = Crane 3. They share one lane; only one may occupy it at a time.</p>
+    <details class="model-guide"><summary>How are the three systems different?</summary><div class="model-guide-grid"><p><strong>Central lock · reference</strong>One coordinator chooses the next crane. It can still assign another crane if a crane fails, provided the coordinator stays available.</p><p><strong>Basic token</strong>Cranes pass one token. Only its holder may request lane entry. This version cannot replace the token if its holder stops.</p><p><strong>CraneLock</strong>Adds majority-approved recovery and checks against old permissions. Recovery changes digital authority; it never proves the lane is empty.</p></div></details>
+  </details>
+  <section id="benefits" class="panel explanation" aria-label="Measured benefits and costs">
+    <h2 id="benefit-title">Results summary</h2>
+    <p id="benefit-scope" class="scope-note"></p><div id="benefit-cards" class="explanation-grid"></div>
+  </section>
+  <details class="panel advanced-totals"><summary>Recorded checks and totals</summary><section class="stats" aria-label="Result indicators">
+    <article class="stat"><div>CHECKS PASSED <span>↗</span></div><strong id="kpi-runs">—</strong><p id="kpi-status">No results selected</p></article>
+    <article class="stat"><div>DETECTED SAFETY VIOLATIONS <span>◇</span></div><strong id="kpi-safety">—</strong><p id="kpi-safety-note">Only recorded checks are reported</p></article>
+    <article class="stat"><div>COMPLETED LANE USES <span>↔</span></div><strong id="kpi-completed">—</strong><p>A crane both entered and exited; summed across selected runs</p></article>
+    <article class="stat"><div>UNFINISHED REQUESTS <span>◷</span></div><strong id="kpi-unfinished">—</strong><p id="kpi-unfinished-note">Within the observation window</p></article>
+  </section>
+  </details>
+  <section id="comparison" class="comparison panel">
+    <div class="section-head"><h2 id="comparison-title">Performance comparison</h2></div>
+    <div id="comparison-note" class="scope-note"></div><p id="metric-explanation" class="metric-explanation"></p><div id="charts" class="charts"></div>
+    <div class="chart-legend"><span>Bars show the middle result (median) across repeated request sequences.</span><span>“Did not recover” is never drawn as zero seconds.</span></div>
+  </section>
+  <section id="progress" class="progress-panel hidden" aria-label="Completed requests over time">
+    <div class="progress-heading"><div><h2>Are requests still finishing?</h2><p id="progress-context"></p></div><label>Request sequence<select id="progress-seed" aria-label="Progress chart request sequence"></select></label></div>
+    <div id="progress-plot"></div><div id="progress-legend" class="progress-legend"></div><p id="progress-note" class="progress-note"></p>
+  </section>
+  <details class="table-section panel"><summary class="register-summary">Inspect individual runs and raw measurements <span id="run-count" class="pill">0 runs</span></summary>
+    <div class="table-wrap"><table><thead><tr><th>MODEL / RUN</th><th>SCENARIO</th><th>SEED</th><th>RESULT</th><th>COMPLETED</th><th>WAIT p95</th><th>RECOVERY</th><th></th></tr></thead><tbody id="runs"></tbody></table></div>
+    <div id="empty" class="empty hidden"><strong>No experiments here yet.</strong><p>Run a simulator experiment, then refresh this page. No sample values are substituted.</p><code>python -m cranelock_sim --mode compare</code></div>
+  </details>
+  <section id="trace" class="trace-grid">
+    <article class="panel lane-panel"><div class="section-head"><h2>Lane playback</h2><span id="playback-state" class="pill">Paused</span></div>
+      <div class="trace-choices"><label>System<select id="trace-model" aria-label="Playback system"></select></label><label>Scenario<select id="trace-scenario" aria-label="Playback situation"></select></label><label>Request sequence<select id="trace-sequence" aria-label="Playback request sequence"></select></label></div>
+      <details class="exact-run"><summary>Exact saved run (advanced)</summary><label class="run-label">SAVED RUN<select id="trace-run" aria-label="Trace run"></select></label></details>
+      <div id="run-story" class="run-story"></div>
+      <div class="yard"><div class="yard-top"><span>YARD BLOCK 01</span><span id="epoch">EPOCH —</span></div>
+        <div id="controller-console" class="controller-console hidden" data-state="pending" aria-label="Central controller in recorded playback">
+          <div class="controller-symbol" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="controller-copy"><strong>Central controller</strong><span id="controller-status">Before recorded traffic</span><p id="controller-explanation"></p></div>
+        </div>
+        <div id="coordination-status" class="coordination-status hidden"></div>
+        <div class="cranes" id="cranes"></div>
+        <div class="lane-road"><span class="lane-label">SHARED ACCESS LANE</span><div class="road-dashes"></div><div id="occupant" class="occupant">No recorded occupant</div></div>
+        <div class="yard-bottom"><span id="holder">Authority: no snapshot yet</span><span id="network">Peer network: no partition recorded</span></div>
+      </div>
+      <div class="moment"><span id="moment-step" class="eyebrow">READY TO EXPLORE</span><h3 id="moment-title">Start with the first event.</h3><p id="moment-explanation">Use Next event to move through the test at your own pace, or Play to hold each important event for four seconds.</p></div>
+      <div class="step-controls"><button id="previous-event" class="button light">← Previous event</button><button id="next-event" class="button light">Next event →</button><button id="jump-controller-stop" class="button light hidden">Jump to controller stopping</button><button id="reset-trace" class="button light" aria-label="Reset trace">↺ Reset</button></div>
+      <div class="playback-controls"><button id="play" class="button dark" aria-label="Play recorded trace">▶ Play guide</button><output id="clock">0.000 s</output><label class="speed-label">PLAYBACK<select id="speed" aria-label="Playback speed"><option value="guided" selected>Guided · 4 sec / event</option><option value="0.05">0.05× · very slow</option><option value="0.1">0.1× · slow</option><option value="0.25">0.25×</option><option value="1">1× · original time</option><option value="4">4×</option></select></label></div>
+      <input id="scrub" type="range" min="0" max="1" value="0" step="0.001" aria-label="Recorded trace time">
+      <p class="caption">The clock shows original recorded time. Guided mode slows the presentation, not the measurements. This is a saved trace, not live crane control.</p>
+    </article>
+    <article class="panel event-panel"><div class="section-head"><h2>Event log</h2><span id="event-count" class="pill">0 events</span></div>
+      <label class="toggle"><input id="technical" type="checkbox"> Include heartbeats and transport details</label>
+      <div id="trace-warning" class="notice hidden"></div><div id="events" class="event-list"></div>
+    </article>
+  </section>
+  <section id="evidence" class="panel evidence"><div class="section-head"><h2>Saved evidence</h2><span class="pill">Read only</span></div><div id="detail-status"></div><p id="limitations" class="limitations"></p><div id="downloads" class="downloads"></div><details><summary>Inspect saved run summary</summary><pre id="raw-summary">Select a run.</pre></details></section>
+  <footer>CRANELOCK <span>Simulated yard cranes · one shared lane · fixed membership</span><span>No detected violation is not a proof of system-wide safety.</span></footer>
+</main>
+</body></html>

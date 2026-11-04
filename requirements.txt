@@ -1,0 +1,2 @@
+# Shared runtime and development dependencies are pinned in pyproject.toml.
+-e .[dev]

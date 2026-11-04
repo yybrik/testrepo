@@ -1,0 +1,96 @@
+# Development simulation template. See docs/DEPLOYMENT.md before applying.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cranelock-gate-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cranelock-gate
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: cranelock-gate
+  template:
+    metadata:
+      labels:
+        app: cranelock-gate
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+      containers:
+        - name: gate
+          image: cranelock-gate:0.1.0
+          imagePullPolicy: IfNotPresent
+          args: [serve, --config, /config/config.json, --database, /data/gate.sqlite,
+                 --bind, "0.0.0.0:50051", --allow-insecure-development]
+          ports:
+            - containerPort: 50051
+              name: grpc
+            - containerPort: 9090
+              name: metrics
+          readinessProbe:
+            grpc:
+              port: 50051
+              service: cranelock.gate.v1.TrustedAccessGate
+            initialDelaySeconds: 2
+          livenessProbe:
+            grpc:
+              port: 50051
+              service: cranelock.gate.v1.TrustedAccessGate
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: cranelock-gate-data
+        - name: config
+          configMap:
+            name: cranelock-gate-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cranelock-gate
+spec:
+  selector:
+    app: cranelock-gate
+  ports:
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+    - name: metrics
+      port: 9090
+      targetPort: metrics
