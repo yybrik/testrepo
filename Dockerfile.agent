@@ -1,0 +1,22 @@
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY pyproject.toml ./
+COPY cranelock ./cranelock
+COPY cranelock_gate ./cranelock_gate
+
+RUN pip install --no-cache-dir . \
+    && useradd --uid 10001 --create-home crane \
+    && mkdir /data \
+    && chown crane:crane /data
+
+USER 10001:10001
+
+EXPOSE 50051
+
+ENTRYPOINT ["python", "-m", "cranelock"]
+CMD ["run", "--help"]
